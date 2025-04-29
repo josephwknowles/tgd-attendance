@@ -72,11 +72,21 @@ let scanner = null;
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwu7widrUACUJdpKyT-NGcAUnHcdZeO-ofD6U27ootw20Y82KyPispOZd8dJjtmH6zSbg/exec";
 
 function login() {
-  volunteerPIN = document.getElementById('volunteerPin').value.trim();
-  if (volunteerPIN.length > 0) {
+  console.log("🔑 login() called");
+  var input = document.getElementById('volunteerPin');
+  console.log("volunteerPin element:", input);
+  if (!input) {
+    alert("Error: volunteerPin input not found!");
+    return;
+  }
+  var pin = input.value.trim();
+  console.log("Entered PIN:", pin);
+  if (pin.length > 0) {
+    // show that the branches actually run
+    alert("PIN looks non-empty, proceeding to scanner UI");
     document.getElementById('login-section').classList.add('hidden');
     document.getElementById('scan-section').classList.remove('hidden');
-    document.getElementById('volunteerId').innerText = volunteerPIN;
+    document.getElementById('volunteerId').innerText = pin;
   } else {
     alert("Please enter a valid PIN.");
   }
