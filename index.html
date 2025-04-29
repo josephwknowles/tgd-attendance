@@ -72,23 +72,25 @@ let scanner = null;
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwu7widrUACUJdpKyT-NGcAUnHcdZeO-ofD6U27ootw20Y82KyPispOZd8dJjtmH6zSbg/exec";
 
 function login() {
-  console.log("🔑 login() called");
+  // Clear previous debug
+  document.getElementById('debug').innerText = "";
+
   var input = document.getElementById('volunteerPin');
-  console.log("volunteerPin element:", input);
   if (!input) {
-    alert("Error: volunteerPin input not found!");
+    document.getElementById('debug').innerText = "❌ Input element not found!";
     return;
   }
+
   var pin = input.value.trim();
-  console.log("Entered PIN:", pin);
+  document.getElementById('debug').innerText = "Entered PIN: [" + pin + "]";
+
   if (pin.length > 0) {
-    // show that the branches actually run
-    alert("PIN looks non-empty, proceeding to scanner UI");
+    document.getElementById('debug').innerText += " → PIN non-empty, proceeding.";
     document.getElementById('login-section').classList.add('hidden');
     document.getElementById('scan-section').classList.remove('hidden');
     document.getElementById('volunteerId').innerText = pin;
   } else {
-    alert("Please enter a valid PIN.");
+    document.getElementById('debug').innerText += " → Please enter a valid PIN.";
   }
 }
 
