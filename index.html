@@ -1,160 +1,142 @@
 <!DOCTYPE html>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    margin: 20px;
-    font-size: 2rem; /* Larger base font size */
-  }
-
-  input, button {
-    font-size: 1.5rem;
-    padding: 12px;
-    margin: 12px;
-    width: 80%;
-    max-width: 350px;
-  }
-
-  #scanner {
-    width: 90vw;
-    max-width: 450px;
-    margin: 0 auto;
-  }
-
-  #status {
-    font-size: 1.5rem;
-    margin-top: 20px;
-  }
-
-  .hidden {
-    display: none;
-  }
-</style>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Volunteer Portal - Attendance</title>
+
   <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
   <style>
     body {
       font-family: Arial, sans-serif;
       text-align: center;
       margin: 20px;
+      font-size: 2rem; /* Larger base font size */
     }
-    #scanner { width: 300px; margin: 0 auto; }
-    .hidden { display: none; }
+    input, button {
+      font-size: 1.5rem;
+      padding: 12px;
+      margin: 12px;
+      width: 80%;
+      max-width: 350px;
+    }
+    #scanner {
+      width: 90vw;
+      max-width: 450px;
+      margin: 0 auto;
+    }
+    #status {
+      font-size: 1.5rem;
+      margin-top: 20px;
+    }
+    #debug {
+      color: darkred;
+      font-size: 1rem;
+      margin-top: 10px;
+    }
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
+
 <body>
+  <h2>Volunteer Portal</h2>
 
-<h2>Volunteer Portal</h2>
+  <div id="login-section">
+    <p>Enter Volunteer PIN:</p>
+    <input type="text" id="volunteerPin" placeholder="e.g., 1234" />
+    <br />
+    <button onclick="login()">Login</button>
+  </div>
 
-<div id="login-section">
-  <p>Enter Volunteer PIN:</p>
-  <input type="text" id="volunteerPin" placeholder="e.g., 1234">
-  <br><br>
-  <button onclick="login()">Login</button>
-</div>
+  <p id="debug"></p>
 
-<div id="scan-section" class="hidden">
-  <p>Welcome Volunteer <span id="volunteerId"></span>!</p>
-  <div id="scanner"></div>
-  <p id="status"></p>
-  <button onclick="startScanner()">Start Scanning</button>
-  <button onclick="stopScanner()">Stop Scanning</button>
-</div>
+  <div id="scan-section" class="hidden">
+    <p>Welcome Volunteer <span id="volunteerId"></span>!</p>
+    <div id="scanner"></div>
+    <p id="status"></p>
+    <button onclick="startScanner()">Start Scanning</button>
+    <button onclick="stopScanner()">Stop Scanning</button>
+  </div>
 
-<script>
-let volunteerPIN = '';
-let scanner = null;
+  <script>
+    let volunteerPIN = '';
+    let scanner = null;
 
-// Your Web App URL here
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwu7widrUACUJdpKyT-NGcAUnHcdZeO-ofD6U27ootw20Y82KyPispOZd8dJjtmH6zSbg/exec";
+    // Replace with your actual Web App URL:
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwu7widrUACUJdpKyT-NGcAUnHcdZeO-ofD6U27ootw20Y82KyPispOZd8dJjtmH6zSbg/exec";
 
-function login() {
-  // Clear previous debug
-  document.getElementById('debug').innerText = "";
+    function login() {
+      // clear debug
+      document.getElementById('debug').innerText = '';
 
-  var input = document.getElementById('volunteerPin');
-  if (!input) {
-    document.getElementById('debug').innerText = "❌ Input element not found!";
-    return;
-  }
+      const input = document.getElementById('volunteerPin');
+      if (!input) {
+        document.getElementById('debug').innerText = '❌ Input element not found!';
+        return;
+      }
 
-  var pin = input.value.trim();
-  document.getElementById('debug').innerText = "Entered PIN: [" + pin + "]";
+      const pin = input.value.trim();
+      document.getElementById('debug').innerText = `Entered PIN: [${pin}]`;
 
-  if (pin.length > 0) {
-    document.getElementById('debug').innerText += " → PIN non-empty, proceeding.";
-    document.getElementById('login-section').classList.add('hidden');
-    document.getElementById('scan-section').classList.remove('hidden');
-    document.getElementById('volunteerId').innerText = pin;
-  } else {
-    document.getElementById('debug').innerText += " → Please enter a valid PIN.";
-  }
-}
+      if (pin.length > 0) {
+        volunteerPIN = pin;  // save globally
+        document.getElementById('debug').innerText += ' → PIN non-empty, proceeding.';
+        document.getElementById('login-section').classList.add('hidden');
+        document.getElementById('scan-section').classList.remove('hidden');
+        document.getElementById('volunteerId').innerText = pin;
+      } else {
+        document.getElementById('debug').innerText += ' → Please enter a valid PIN.';
+      }
+    }
 
-function startScanner() {
-  if (!scanner) {
-    scanner = new Html5Qrcode("scanner");
-  }
-  scanner.start(
-    { facingMode: "environment" },
-    {
-      fps: 10,
-      qrbox: { width: 250, height: 250 }
-    },
-    qrCodeSuccess
-  ).catch(err => {
-    console.error(err);
-    document.getElementById('status').innerText = "Error starting camera.";
-  });
-}
+    function startScanner() {
+      if (!scanner) {
+        scanner = new Html5Qrcode('scanner');
+      }
+      scanner.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        qrCodeSuccess
+      ).catch(err => {
+        console.error('Error starting scanner:', err);
+        document.getElementById('status').innerText = 'Error starting camera.';
+      });
+    }
 
-function stopScanner() {
-  if (scanner) {
-    scanner.stop().then(() => {
-      console.log("Scanner stopped.");
-    }).catch(err => {
-      console.error("Error stopping scanner: ", err);
-    });
-  }
-}
+    function stopScanner() {
+      if (scanner) {
+        scanner.stop()
+          .then(() => console.log('Scanner stopped.'))
+          .catch(err => {
+            console.error('Error stopping scanner:', err);
+            document.getElementById('status').innerText = 'Error stopping camera.';
+          });
+      }
+    }
 
-function qrCodeSuccess(decodedText, decodedResult) {
-  console.log(`Scanned: ${decodedText}`);
-  document.getElementById('status').innerText = "Processing scan...";
+    function qrCodeSuccess(decodedText, decodedResult) {
+      console.log('Scanned:', decodedText);
+      document.getElementById('status').innerText = 'Processing scan...';
 
-  // Send to Web App
-  const payload = {
-    studentID: decodedText,
-    volunteerPIN: volunteerPIN
-  };
+      const payload = { studentID: decodedText, volunteerPIN };
 
-  fetch(WEB_APP_URL, {
-  method: "POST",
-  headers: { "Content-Type": "application/x-www-form-urlencoded" },
-  body: new URLSearchParams({
-    studentID: decodedText,
-    volunteerPIN
-  })
-})
-.then(res => res.text())
-.then(txt => {
-  document.getElementById('status').innerText = txt;
-})
-.catch(err => {
-  console.error(err);
-  document.getElementById('status').innerText = "❌ Network error.";
-});
-
-    document.getElementById('status').innerText = "✅ Scan successful!";
-  }).catch(err => {
-    console.error(err);
-    document.getElementById('status').innerText = "❌ Error sending data.";
-  });
-}
-</script>
-
+      fetch(WEB_APP_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(payload)
+      })
+      .then(res => res.text())
+      .then(txt => {
+        document.getElementById('status').innerText = txt;
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById('status').innerText = '❌ Network error.';
+      });
+    }
+  </script>
 </body>
 </html>
