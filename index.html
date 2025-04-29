@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Volunteer Portal - Attendance</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 20px;
+    }
+    #scanner { width: 300px; margin: 0 auto; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+<h2>Volunteer Portal</h2>
+
+<div id="login-section">
+  <p>Enter Volunteer PIN:</p>
+  <input type="text" id="volunteerPin" placeholder="e.g., 1234">
+  <br><br>
+  <button onclick="login()">Login</button>
+</div>
+
+<div id="scan-section" class="hidden">
+  <p>Welcome Volunteer <span id="volunteerId"></span>!</p>
+  <div id="scanner"></div>
+  <p id="status"></p>
+  <button onclick="startScanner()">Start Scanning</button>
+  <button onclick="stopScanner()">Stop Scanning</button>
+</div>
+
+<script>
+let volunteerPIN = '';
+let scanner = null;
+
+// Your Web App URL here
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyY-NDdPBUjJ2OU_wSTjUre7tSjXknTTu6MkvgDgFmCjOcxavdN7Qdj-uuj8Ilx3Uc/exec";
+
+function login() {
+  volunteerPIN = document.getElementById('volunteerPin').value.trim();
+  if (volunteerPIN.length > 0) {
+    document.getElementById('login-section').classList.add('hidden');
+    document.getElementById('scan-section').classList.remove('hidden');
+    document.getElementById('volunteerId').innerText = volunteerPIN;
+  } else {
+    alert("Please enter a valid PIN.");
+  }
+}
+
+function startScanner() {
+  if (!scanner) {
+    scanner = new Html5Qrcode("scanner");
+  }
+  scanner.start(
+    { facingMode: "environment" },
+    {
+      fps: 10,
+      qrbox: { width: 250, height: 250 }
+    },
+    qrCodeSuccess
+  ).catch(err => {
+    console.error(err);
+    document.getElementById('status').innerText = "Error starting camera.";
+  });
+}
+
+function stopScanner() {
+  if (scanner) {
+    scanner.stop().then(() => {
+      console.log("Scanner stopped.");
+    }).catch(err => {
+      console.error("Error stopping scanner: ", err);
+    });
+  }
+}
+
+function qrCodeSuccess(decodedText, decodedResult) {
+  console.log(`Scanned: ${decodedText}`);
+  document.getElementById('status').innerText = "Processing scan...";
+
+  // Send to Web App
+  const payload = {
+    studentID: decodedText,
+    volunteerPIN: volunteerPIN
+  };
+
+  fetch(WEB_APP_URL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: new URLSearchParams(payload)
+  }).then(() => {
+    document.getElementById('status').innerText = "✅ Scan successful!";
+  }).catch(err => {
+    console.error(err);
+    document.getElementById('status').innerText = "❌ Error sending data.";
+  });
+}
+</script>
+
+</body>
+</html>
