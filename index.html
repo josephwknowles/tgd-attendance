@@ -12,7 +12,7 @@
       font-family: Arial, sans-serif;
       text-align: center;
       margin: 20px;
-      font-size: 2rem; /* Larger base font size */
+      font-size: 2rem;
     }
     input, button {
       font-size: 1.5rem;
@@ -29,6 +29,12 @@
     #status {
       font-size: 1.5rem;
       margin-top: 20px;
+    }
+    #status.success {
+      color: green;
+    }
+    #status.error {
+      color: red;
     }
     #debug {
       color: darkred;
@@ -64,14 +70,12 @@
   <script>
     let volunteerPIN = '';
     let scanner = null;
+    let lastScanTime = 0;
 
-    // Replace with your actual Web App URL:
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwu7widrUACUJdpKyT-NGcAUnHcdZeO-ofD6U27ootw20Y82KyPispOZd8dJjtmH6zSbg/exec";
 
     function login() {
-      // clear debug
       document.getElementById('debug').innerText = '';
-
       const input = document.getElementById('volunteerPin');
       if (!input) {
         document.getElementById('debug').innerText = '❌ Input element not found!';
@@ -79,17 +83,16 @@
       }
 
       const pin = input.value.trim();
-      document.getElementById('debug').innerText = `Entered PIN: [${pin}]`;
 
-      if (pin.length > 0) {
-        volunteerPIN = pin;  // save globally
-        document.getElementById('debug').innerText += ' → PIN non-empty, proceeding.';
-        document.getElementById('login-section').classList.add('hidden');
-        document.getElementById('scan-section').classList.remove('hidden');
-        document.getElementById('volunteerId').innerText = pin;
-      } else {
-        document.getElementById('debug').innerText += ' → Please enter a valid PIN.';
+      if (!/^\d{4}$/.test(pin)) {
+        document.getElementById('debug').innerText = '❌ PIN must be 4 digits.';
+        return;
       }
+
+      volunteerPIN = pin;
+      document.getElementById('login-section').classList.add('hidden');
+      document.getElementById('scan-section').classList.remove('hidden');
+      document.getElementById('volunteerId').innerText = pin;
     }
 
     function startScanner() {
@@ -103,6 +106,7 @@
       ).catch(err => {
         console.error('Error starting scanner:', err);
         document.getElementById('status').innerText = 'Error starting camera.';
+        document.getElementById('status').className = 'error';
       });
     }
 
@@ -113,13 +117,20 @@
           .catch(err => {
             console.error('Error stopping scanner:', err);
             document.getElementById('status').innerText = 'Error stopping camera.';
+            document.getElementById('status').className = 'error';
           });
       }
     }
 
-    function qrCodeSuccess(decodedText, decodedResult) {
+    function qrCodeSuccess(decodedText) {
+      const now = Date.now();
+      if (now - lastScanTime < 2000) return;
+      lastScanTime = now;
+
       console.log('Scanned:', decodedText);
-      document.getElementById('status').innerText = 'Processing scan...';
+      const statusEl = document.getElementById('status');
+      statusEl.innerText = 'Processing scan...';
+      statusEl.className = '';
 
       const payload = { studentID: decodedText, volunteerPIN };
 
@@ -130,11 +141,13 @@
       })
       .then(res => res.text())
       .then(txt => {
-        document.getElementById('status').innerText = txt;
+        statusEl.innerText = txt;
+        statusEl.className = txt.includes('✅') ? 'success' : 'error';
       })
       .catch(err => {
         console.error(err);
-        document.getElementById('status').innerText = '❌ Network error.';
+        statusEl.innerText = '❌ Network error.';
+        statusEl.className = 'error';
       });
     }
   </script>
