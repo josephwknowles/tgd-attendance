@@ -85,7 +85,7 @@
       const pin = input.value.trim();
 
       if (!/^\d{4}$/.test(pin)) {
-        document.getElementById('debug').innerText = '❌ PIN must be 4 digits.';
+        document.getElementById('debug').innerText = '❌ Invalid PIN.';
         return;
       }
 
