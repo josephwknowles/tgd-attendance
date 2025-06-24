@@ -96,19 +96,41 @@
     }
 
     function startScanner() {
-      if (!scanner) {
-        scanner = new Html5Qrcode('scanner');
+      const statusEl = document.getElementById('status');
+      statusEl.innerText = 'Initializing scanner...';
+      statusEl.className = '';
+
+    try {
+     if (!scanner) {
+      scanner = new Html5Qrcode('scanner');
+     }
+
+     scanner.start(
+       { facingMode: 'environment' },
+       { fps: 10, qrbox: { width: 250, height: 250 } },
+       qrCodeSuccess,
+       errorMessage => {
+         // Optional: log scan errors
+         console.warn(`QR scan error: ${errorMessage}`);
       }
-      scanner.start(
-        { facingMode: 'environment' },
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        qrCodeSuccess
-      ).catch(err => {
-        console.error('Error starting scanner:', err);
-        document.getElementById('status').innerText = 'Error starting camera.';
-        document.getElementById('status').className = 'error';
-      });
+    )
+      .then(() => {
+        console.log('Scanner started successfully');
+        statusEl.innerText = 'Scanner is running. Point camera at badge.';
+        statusEl.className = '';
+    })
+      .catch(err => {
+        console.error('Scanner failed to start:', err);
+        statusEl.innerText = '❌ Failed to start scanner.';
+        statusEl.className = 'error';
+    });
+    } catch (err) {
+      console.error('Unexpected error during scanner init:', err);
+      statusEl.innerText = '❌ Unexpected error.';
+      statusEl.className = 'error';
     }
+}
+
 
     function stopScanner() {
       if (scanner) {
